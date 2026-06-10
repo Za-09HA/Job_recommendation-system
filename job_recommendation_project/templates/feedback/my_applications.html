@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}My Applications — NexaJobs{% endblock %}
+{% block extra_head %}
+<style>
+.apps-wrap{max-width:900px;margin:0 auto;padding:3rem 2rem;}
+.app-card{display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:center;padding:1.5rem;margin-bottom:1rem;text-decoration:none;color:inherit;}
+.app-card:hover{border-color:rgba(79,142,247,.3);}
+.app-company{font-size:.8rem;color:var(--text2);margin-bottom:.2rem;}
+.app-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.5rem;}
+.app-meta{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;}
+.status-pill{padding:.3rem .9rem;border-radius:50px;font-size:.75rem;font-weight:700;}
+.pill-submitted{background:rgba(79,142,247,.15);color:var(--accent);}
+.pill-under_review{background:rgba(251,191,36,.12);color:#fbbf24;}
+.pill-shortlisted{background:rgba(6,214,160,.12);color:var(--accent3);}
+.pill-rejected{background:rgba(247,37,133,.1);color:#f72585;}
+.pill-hired{background:rgba(6,214,160,.2);color:#00d084;}
+.empty-state{text-align:center;padding:5rem 2rem;color:var(--text3);}
+.empty-icon{font-size:3.5rem;margin-bottom:1.2rem;display:block;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="apps-wrap">
+  <div class="anim-up" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+    <div>
+      <h1 style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;">My Applications</h1>
+      <p style="color:var(--text2);">{{ applications.count }} application{{ applications.count|pluralize }} submitted</p>
+    </div>
+    <a href="{% url 'job_list' %}" class="btn btn-primary">Browse More Jobs</a>
+  </div>
+
+  {% if applications %}
+  {% for app in applications %}
+  <a href="{% url 'application_detail' app.pk %}" class="glass-card app-card anim-up">
+    <div>
+      <div class="app-company">{{ app.job.company }} &bull; {{ app.job.location }}</div>
+      <div class="app-title">{{ app.job.title }}</div>
+      <div class="app-meta">
+        <span class="status-pill pill-{{ app.status }}">● {{ app.get_status_display }}</span>
+        <span class="badge badge-blue">{{ app.job.get_category_display }}</span>
+        <span style="font-size:.78rem;color:var(--text3);">Applied {{ app.applied_at|timesince }} ago</span>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:.85rem;color:var(--accent3);font-weight:600;">{{ app.job.salary_display }}</div>
+      <div style="font-size:.75rem;color:var(--text3);margin-top:.3rem;">{{ app.job.get_job_type_display }}</div>
+      <div style="margin-top:.8rem;font-size:.8rem;color:var(--accent);">View Details →</div>
+    </div>
+  </a>
+  {% endfor %}
+
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon">📭</span>
+    <h2 style="font-family:'Syne',sans-serif;margin-bottom:.5rem;">No applications yet</h2>
+    <p style="margin-bottom:2rem;">Start applying to jobs and track everything here.</p>
+    <a href="{% url 'recommendations' %}" class="btn btn-primary">See AI Recommendations →</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

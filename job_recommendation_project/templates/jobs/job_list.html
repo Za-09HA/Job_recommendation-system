@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Browse Jobs — NexaJobs{% endblock %}
+{% block extra_head %}
+<style>
+.list-wrap{max-width:1100px;margin:0 auto;padding:3rem 2rem;}
+.list-header{margin-bottom:2rem;}
+.filter-bar{background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;backdrop-filter:blur(20px);}
+.filter-row{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;}
+.filter-group{flex:1;min-width:140px;}
+.filter-label{font-size:.78rem;color:var(--text2);margin-bottom:.4rem;display:block;}
+select.form-control,input.form-control{padding:.6rem .9rem;font-size:.85rem;}
+.jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.2rem;}
+.job-card{padding:1.5rem;position:relative;overflow:hidden;text-decoration:none;display:block;color:inherit;}
+.job-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(79,142,247,.05),transparent);opacity:0;transition:opacity .3s;}
+.job-card:hover::after{opacity:1;}
+.jc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.8rem;}
+.jc-company{font-size:.78rem;color:var(--text2);}
+.jc-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.6rem;line-height:1.3;}
+.jc-skills{display:flex;flex-wrap:wrap;gap:.3rem;margin:.7rem 0;}
+.jc-footer{display:flex;justify-content:space-between;align-items:center;padding-top:.9rem;border-top:1px solid var(--glass-border);}
+.count-badge{background:rgba(79,142,247,.12);color:var(--accent);padding:.25rem .8rem;border-radius:50px;font-size:.78rem;font-weight:600;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="list-wrap">
+  <div class="list-header anim-up">
+    <h1 style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;margin-bottom:.4rem;">Browse Opportunities</h1>
+    <p style="color:var(--text2);">{{ jobs.count }} jobs found</p>
+  </div>
+
+  <div class="filter-bar anim-up-2">
+    <form method="get" class="filter-row">
+      <div class="filter-group" style="flex:2;min-width:200px;">
+        <label class="filter-label">Search</label>
+        <input type="text" name="q" class="form-control" placeholder="Job title, skill, company…" value="{{ filters.q }}"/>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Category</label>
+        <select name="category" class="form-control">
+          <option value="">All Categories</option>
+          {% for val,label in categories %}<option value="{{ val }}" {% if filters.category == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Job Type</label>
+        <select name="job_type" class="form-control">
+          <option value="">All Types</option>
+          {% for val,label in job_types %}<option value="{{ val }}" {% if filters.job_type == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Location</label>
+        <input type="text" name="location" class="form-control" placeholder="City or Remote" value="{{ filters.location }}"/>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Experience</label>
+        <select name="experience" class="form-control">
+          <option value="">Any Level</option>
+          <option value="fresher" {% if filters.experience == 'fresher' %}selected{% endif %}>Fresher</option>
+          <option value="1_2" {% if filters.experience == '1_2' %}selected{% endif %}>1-2 Years</option>
+          <option value="3_5" {% if filters.experience == '3_5' %}selected{% endif %}>3-5 Years</option>
+          <option value="5_plus" {% if filters.experience == '5_plus' %}selected{% endif %}>5+ Years</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Filter</button>
+      <a href="{% url 'job_list' %}" class="btn btn-outline">Reset</a>
+    </form>
+  </div>
+
+  <div class="jobs-grid anim-up-3">
+    {% for job in jobs %}
+    <a href="{% url 'job_detail' job.pk %}" class="glass-card job-card">
+      <div class="jc-top">
+        <div>
+          <div class="jc-company">{{ job.company }}</div>
+          <div class="jc-title">{{ job.title }}</div>
+        </div>
+        {% if job.experience_required == 'fresher' %}<span class="badge badge-green">Fresher</span>{% endif %}
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <span class="badge badge-blue">{{ job.get_category_display }}</span>
+        <span class="badge badge-purple">{{ job.get_job_type_display }}</span>
+      </div>
+      <div class="jc-skills">
+        {% for sk in job.get_skills_list|slice:":4" %}<span class="skill-tag">{{ sk }}</span>{% endfor %}
+      </div>
+      <div class="jc-footer">
+        <span style="font-size:.8rem;color:var(--text2);">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          {{ job.location }}
+        </span>
+        <span style="font-size:.8rem;color:var(--accent3);font-weight:600;">{{ job.salary_display }}</span>
+      </div>
+    </a>
+    {% empty %}
+    <div style="grid-column:1/-1;text-align:center;padding:4rem;color:var(--text3);">
+      <div style="font-size:3rem;margin-bottom:1rem;">🔍</div>
+      <p>No jobs match your filters. <a href="{% url 'job_list' %}" style="color:var(--accent);">Clear filters</a></p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

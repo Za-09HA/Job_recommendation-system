@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}AI Recommendations — NexaJobs{% endblock %}
+{% block extra_head %}
+<style>
+.rec-wrap{max-width:900px;margin:0 auto;padding:3rem 2rem;}
+.rec-header{margin-bottom:2rem;}
+.rec-header h1{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;margin-bottom:.4rem;}
+.rec-card{display:flex;gap:1.2rem;align-items:flex-start;padding:1.5rem;text-decoration:none;color:inherit;margin-bottom:1rem;}
+.match-circle{min-width:64px;height:64px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--bg3) 0);position:relative;flex-shrink:0;}
+.match-circle::after{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--card);}
+.match-pct{font-size:.75rem;font-weight:700;color:var(--accent);z-index:1;position:relative;}
+.rec-main{flex:1;}
+.rec-job-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:.25rem;}
+.rec-company-loc{font-size:.82rem;color:var(--text2);margin-bottom:.6rem;}
+.skills-row{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.6rem;}
+.ai-badge{background:linear-gradient(135deg,rgba(79,142,247,.15),rgba(124,58,237,.15));border:1px solid rgba(79,142,247,.25);color:var(--accent);font-size:.72rem;padding:.2rem .6rem;border-radius:50px;display:inline-block;font-weight:600;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="rec-wrap">
+  <div class="rec-header anim-up">
+    <div class="ai-badge" style="margin-bottom:1rem;">✦ AI-Powered</div>
+    <h1>Jobs Matched For You</h1>
+    <p style="color:var(--text2);">Based on your skills, experience, and preferences — ranked by AI match score.</p>
+    {% if not profile.skills %}
+    <div class="alert alert-error" style="margin-top:1rem;">
+      Your profile has no skills yet. <a href="{% url 'profile_edit' %}" style="color:var(--accent);">Add skills</a> for better results.
+    </div>
+    {% endif %}
+  </div>
+
+  {% for item in results %}
+  <a href="{% url 'job_detail' item.job.pk %}" class="glass-card rec-card anim-up">
+    <div class="match-circle" style="--pct:{{ item.match_pct }}">
+      <span class="match-pct">{{ item.match_pct }}%</span>
+    </div>
+    <div class="rec-main">
+      <div class="rec-job-title">{{ item.job.title }}</div>
+      <div class="rec-company-loc">{{ item.job.company }} · {{ item.job.location }}</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <span class="badge badge-blue">{{ item.job.get_category_display }}</span>
+        <span class="badge badge-purple">{{ item.job.get_job_type_display }}</span>
+        {% if item.job.experience_required == 'fresher' %}<span class="badge badge-green">Fresher OK</span>{% endif %}
+      </div>
+      <div class="skills-row">
+        {% for sk in item.job.get_skills_list|slice:":5" %}<span class="skill-tag">{{ sk }}</span>{% endfor %}
+      </div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;">
+      <div style="font-size:.9rem;color:var(--accent3);font-weight:600;">{{ item.job.salary_display }}</div>
+      <div style="font-size:.75rem;color:var(--text3);margin-top:.3rem;">{{ item.job.posted_at|timesince }} ago</div>
+      <div class="match-bar" style="width:80px;margin-top:.5rem;">
+        <div class="match-fill" style="width:{{ item.match_pct }}%"></div>
+      </div>
+    </div>
+  </a>
+  {% empty %}
+  <div style="text-align:center;padding:4rem;color:var(--text3);">
+    <div style="font-size:3rem;margin-bottom:1rem;">🤖</div>
+    <p>No jobs in the database yet or profile is empty.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;margin-top:1.5rem;">
+      <a href="{% url 'profile_edit' %}" class="btn btn-primary">Complete Profile</a>
+      <a href="{% url 'job_list' %}" class="btn btn-outline">Browse All Jobs</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

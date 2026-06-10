@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% block title %}REST API Docs — NexaJobs{% endblock %}
+{% block extra_head %}
+<style>
+.docs-wrap{max-width:1000px;margin:0 auto;padding:3rem 2rem;}
+.docs-title{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;margin-bottom:.5rem;}
+.docs-sub{color:var(--text2);margin-bottom:2.5rem;}
+.base-url{background:var(--bg3);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:.9rem 1.4rem;font-family:monospace;font-size:.95rem;color:var(--accent3);margin-bottom:2.5rem;display:flex;align-items:center;gap:1rem;}
+.endpoint-group{margin-bottom:2.5rem;}
+.group-title{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--glass-border);}
+.endpoint{background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);margin-bottom:.8rem;overflow:hidden;}
+.ep-header{display:flex;align-items:center;gap:1rem;padding:1.1rem 1.4rem;cursor:pointer;user-select:none;}
+.ep-header:hover{background:rgba(255,255,255,.02);}
+.method{font-size:.72rem;font-weight:700;padding:.3rem .7rem;border-radius:6px;min-width:56px;text-align:center;font-family:monospace;}
+.GET{background:rgba(6,214,160,.15);color:#06d6a0;border:1px solid rgba(6,214,160,.25);}
+.POST{background:rgba(79,142,247,.15);color:#4f8ef7;border:1px solid rgba(79,142,247,.25);}
+.ep-path{font-family:monospace;font-size:.9rem;color:var(--text);}
+.ep-desc{font-size:.82rem;color:var(--text2);margin-left:auto;}
+.auth-badge{font-size:.7rem;padding:.2rem .6rem;background:rgba(251,191,36,.1);color:#fbbf24;border-radius:50px;border:1px solid rgba(251,191,36,.2);}
+.ep-body{padding:0 1.4rem 1.4rem;display:none;border-top:1px solid var(--glass-border);}
+.ep-body.open{display:block;}
+.param-table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.82rem;}
+.param-table th{text-align:left;color:var(--text3);font-weight:500;padding:.4rem .6rem;border-bottom:1px solid var(--glass-border);}
+.param-table td{padding:.5rem .6rem;color:var(--text2);border-bottom:1px solid rgba(255,255,255,.03);}
+.param-table td:first-child{color:var(--accent);font-family:monospace;}
+.code-block{background:var(--bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:1rem;font-family:monospace;font-size:.8rem;color:var(--text2);overflow-x:auto;margin-top:.8rem;white-space:pre;}
+.try-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:.5rem 1.2rem;border-radius:50px;font-size:.82rem;cursor:pointer;font-weight:600;margin-top:1rem;}
+.response-area{margin-top:.8rem;display:none;}
+.response-area.show{display:block;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="docs-wrap">
+  <div class="anim-up">
+    <div class="docs-title">REST API Documentation</div>
+    <p class="docs-sub">Full JSON API for NexaJobs. Use JWT tokens for authenticated endpoints.</p>
+    <div class="base-url">
+      <span style="color:var(--text3);font-size:.8rem;">BASE URL</span>
+      <span id="base-url-text">http://127.0.0.1:8000/api/v1</span>
+    </div>
+  </div>
+
+  <!-- Auth -->
+  <div class="endpoint-group anim-up-2">
+    <div class="group-title">🔐 Authentication</div>
+
+    <div class="endpoint">
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method POST">POST</span>
+        <span class="ep-path">/auth/register/</span>
+        <span class="ep-desc">Create a new account</span>
+      </div>
+      <div class="ep-body">
+        <table class="param-table"><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+          <tr><td>username</td><td>string</td><td>✓</td><td>Unique username</td></tr>
+          <tr><td>email</td><td>string</td><td>✓</td><td>User email</td></tr>
+          <tr><td>first_name</td><td>string</td><td>✓</td><td>First name</td></tr>
+          <tr><td>last_name</td><td>string</td><td>✓</td><td>Last name</td></tr>
+          <tr><td>password</td><td>string</td><td>✓</td><td>Min 8 characters</td></tr>
+          <tr><td>password2</td><td>string</td><td>✓</td><td>Must match password</td></tr>
+        </table>
+        <div class="code-block">// Example response
+{
+  "user": { "id": 1, "username": "johndoe", "email": "john@example.com" },
+  "access": "eyJ0eXAiOiJKV1QiLC...",
+  "refresh": "eyJ0eXAiOiJKV1QiLC...",
+  "message": "Account created successfully!"
+}</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method POST">POST</span>
+        <span class="ep-path">/auth/login/</span>
+        <span class="ep-desc">Get JWT tokens</span>
+      </div>
+      <div class="ep-body">
+        <table class="param-table"><tr><th>Field</th><th>Type</th><th>Required</th></tr>
+          <tr><td>username</td><td>string</td><td>✓</td></tr>
+          <tr><td>password</td><td>string</td><td>✓</td></tr>
+        </table>
+        <div class="code-block">// Returns access + refresh tokens
+{ "user": {...}, "access": "...", "refresh": "..." }</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method POST">POST</span>
+        <span class="ep-path">/auth/refresh/</span>
+        <span class="ep-desc">Refresh access token</span>
+      </div>
+      <div class="ep-body">
+        <div class="code-block">// Body: { "refresh": "your_refresh_token" }
+// Returns: { "access": "new_access_token" }</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jobs -->
+  <div class="endpoint-group anim-up-2">
+    <div class="group-title">💼 Jobs</div>
+
+    <div class="endpoint">
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method GET">GET</span>
+        <span class="ep-path">/jobs/</span>
+        <span class="ep-desc">List & filter all jobs</span>
+      </div>
+      <div class="ep-body">
+        <table class="param-table"><tr><th>Query Param</th><th>Description</th></tr>
+          <tr><td>search</td><td>Search title, company, skills</td></tr>
+          <tr><td>category</td><td>software, data, frontend, backend…</td></tr>
+          <tr><td>job_type</td><td>full_time, part_time, remote, internship</td></tr>
+          <tr><td>experience</td><td>fresher, 1_2, 3_5, 5_plus</td></tr>
+          <tr><td>location</td><td>City name or "Remote"</td></tr>
+          <tr><td>page</td><td>Pagination (10 per page)</td></tr>
+        </table>
+        <button class="try-btn" onclick="tryAPI('/api/v1/jobs/?page=1', 'GET', null, 'res-jobs')">▶ Try It</button>
+        <div id="res-jobs" class="response-area"><div class="code-block" id="res-jobs-body">Loading...</div></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method GET">GET</span>
+        <span class="ep-path">/jobs/{`{id}`}/</span>
+        <span class="ep-desc">Get single job detail</span>
+      </div>
+      <div class="ep-body">
+        <button class="try-btn" onclick="tryAPI('/api/v1/jobs/1/', 'GET', null, 'res-job1')">▶ Try Job #1</button>
+        <div id="res-job1" class="response-area"><div class="code-block" id="res-job1-body">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="endpoint-group anim-up-2">
+    <div class="group-title">🤖 AI Recommendations</div>
+    <div class="endpoint">
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method GET">GET</span>
+        <span class="ep-path">/recommendations/</span>
+        <span class="ep-desc">Get AI-ranked jobs for current user</span>
+        <span class="auth-badge">🔑 Auth required</span>
+      </div>
+      <div class="ep-body">
+        <p style="color:var(--text2);font-size:.85rem;">Returns jobs ranked by TF-IDF + Cosine Similarity + Collaborative Filtering.</p>
+        <div class="code-block">// Add header: Authorization: Bearer &lt;access_token&gt;
+{ "count": 20, "results": [{ "id": 3, "title": "...", "ai_score": 0.87, "match_percent": 75, ... }] }</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile & Feedback -->
+  <div class="endpoint-group anim-up-3">
+    <div class="group-title">👤 Profile & Feedback</div>
+
+    <div class="endpoint">
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method GET">GET</span>
+        <span class="ep-path">/profile/</span>
+        <span class="ep-desc">Get current user's profile</span>
+        <span class="auth-badge">🔑 Auth required</span>
+      </div>
+      <div class="ep-body"><div class="code-block">// PATCH /profile/ to update — send only fields you want to change
+{ "skills": "Python, Django", "preferred_roles": "Backend Developer", ... }</div></div>
+    </div>
+
+    <div class="endpoint">
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method GET">GET</span>
+        <span class="ep-path">/feedback/</span>
+        <span class="ep-desc">Get user's liked/applied/saved jobs</span>
+        <span class="auth-badge">🔑 Auth required</span>
+      </div>
+      <div class="ep-body">
+        <table class="param-table"><tr><th>Query Param</th><th>Values</th></tr>
+          <tr><td>action</td><td>like, save, apply, skip</td></tr>
+        </table>
+        <div class="code-block">// POST /feedback/ to submit feedback
+{ "job": 3, "action": "like" }</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="ep-header" onclick="toggle(this)">
+        <span class="method GET">GET</span>
+        <span class="ep-path">/stats/</span>
+        <span class="ep-desc">Dashboard stats for current user</span>
+        <span class="auth-badge">🔑 Auth required</span>
+      </div>
+      <div class="ep-body">
+        <div class="code-block">{ "total_jobs": 12, "applied": 3, "liked": 5, "saved": 2, "profile_complete": true }</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth header usage -->
+  <div class="endpoint-group anim-up-3">
+    <div class="group-title">📖 How to Use JWT Auth</div>
+    <div style="background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.8rem;">
+      <div class="code-block">// 1. Login to get tokens
+POST /api/v1/auth/login/
+{ "username": "johndoe", "password": "yourpassword" }
+
+// 2. Use access token in every authenticated request
+GET /api/v1/recommendations/
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
+
+// 3. When access token expires (1 day), refresh it
+POST /api/v1/auth/refresh/
+{ "refresh": "your_refresh_token" }</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggle(header) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+async function tryAPI(url, method, body, resId) {
+  const resDiv = document.getElementById(resId);
+  const resBody = document.getElementById(resId + '-body');
+  resDiv.classList.add('show');
+  resBody.textContent = 'Loading...';
+  try {
+    const r = await fetch(url, {
+      method,
+      headers: {'Content-Type': 'application/json'},
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await r.json();
+    resBody.textContent = JSON.stringify(data, null, 2);
+  } catch(e) {
+    resBody.textContent = 'Error: ' + e.message;
+  }
+}
+</script>
+{% endblock %}

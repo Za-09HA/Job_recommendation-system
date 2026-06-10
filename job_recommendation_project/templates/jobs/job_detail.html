@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}{{ job.title }} at {{ job.company }} — NexaJobs{% endblock %}
+{% block extra_head %}
+<style>
+.detail-wrap{max-width:1000px;margin:0 auto;padding:3rem 2rem;}
+.detail-grid{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;}
+@media(max-width:768px){.detail-grid{grid-template-columns:1fr;}}
+.job-header{padding:2rem;background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);margin-bottom:1.5rem;}
+.job-big-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:.5rem;}
+.job-company-big{font-size:1rem;color:var(--text2);margin-bottom:1rem;}
+.meta-row{display:flex;flex-wrap:wrap;gap:.8rem;margin-bottom:1.2rem;}
+.meta-item{display:flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--text2);}
+.action-btns{display:flex;gap:.7rem;flex-wrap:wrap;}
+.section-card{padding:1.8rem;background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);margin-bottom:1.2rem;}
+.section-card h3{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text);}
+.desc-content{color:var(--text2);line-height:1.8;font-size:.92rem;white-space:pre-line;}
+.sidebar-card{padding:1.5rem;background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);margin-bottom:1rem;}
+.sidebar-card h3{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:1rem;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--glass-border);font-size:.85rem;}
+.info-row:last-child{border-bottom:none;}
+.info-label{color:var(--text3);}
+.info-value{color:var(--text);font-weight:500;}
+.similar-job{padding:.9rem;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:.6rem;text-decoration:none;display:block;color:inherit;border:1px solid var(--glass-border);transition:all .2s;}
+.similar-job:hover{border-color:rgba(79,142,247,.3);}
+</style>
+{% endblock %}
+{% block content %}
+<div class="detail-wrap">
+  <div style="margin-bottom:1rem;"><a href="{% url 'job_list' %}" style="color:var(--text2);text-decoration:none;font-size:.85rem;">← Back to Jobs</a></div>
+
+  <div class="job-header anim-up">
+    <div class="job-big-title">{{ job.title }}</div>
+    <div class="job-company-big">{{ job.company }}</div>
+    <div class="meta-row">
+      <div class="meta-item">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        {{ job.location }}
+      </div>
+      <span class="badge badge-blue">{{ job.get_category_display }}</span>
+      <span class="badge badge-purple">{{ job.get_job_type_display }}</span>
+      <span class="badge badge-{% if job.experience_required == 'fresher' %}green{% else %}amber{% endif %}">{{ job.get_experience_required_display }}</span>
+      {% if job.salary_min %}<span class="badge badge-green">{{ job.salary_display }}</span>{% endif %}
+    </div>
+    <div class="action-btns">
+      {% if user.is_authenticated %}
+      <a href="{% url 'apply' job.pk %}" class="btn btn-success">🚀 Apply Now</a>
+      <a href="{% url 'submit_feedback' job.pk 'like' %}" class="btn btn-outline">♡ Like</a>
+      <a href="{% url 'submit_feedback' job.pk 'save' %}" class="btn btn-outline">🔖 Save</a>
+      {% if user_feedback %}
+      <span class="badge badge-green" style="padding:.5rem .9rem;">You {{ user_feedback.action }}d this</span>
+      {% endif %}
+      {% else %}
+      <a href="{% url 'login' %}" class="btn btn-primary">Login to Apply</a>
+      {% endif %}
+      {% if job.source_url %}<a href="{{ job.source_url }}" target="_blank" class="btn btn-outline">View Original ↗</a>{% endif %}
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="anim-up-2">
+      <div class="section-card">
+        <h3>📋 Job Description</h3>
+        <div class="desc-content">{{ job.description }}</div>
+      </div>
+      <div class="section-card">
+        <h3>⚙️ Required Skills</h3>
+        <div>{% for sk in job.get_skills_list %}<span class="skill-tag" style="font-size:.85rem;padding:.3rem .9rem;">{{ sk }}</span>{% endfor %}</div>
+      </div>
+    </div>
+
+    <div class="anim-up-3">
+      <div class="sidebar-card">
+        <h3>📊 Job Overview</h3>
+        <div class="info-row"><span class="info-label">Category</span><span class="info-value">{{ job.get_category_display }}</span></div>
+        <div class="info-row"><span class="info-label">Type</span><span class="info-value">{{ job.get_job_type_display }}</span></div>
+        <div class="info-row"><span class="info-label">Experience</span><span class="info-value">{{ job.get_experience_required_display }}</span></div>
+        <div class="info-row"><span class="info-label">Salary</span><span class="info-value" style="color:var(--accent3);">{{ job.salary_display }}</span></div>
+        <div class="info-row"><span class="info-label">Posted</span><span class="info-value">{{ job.posted_at|date:"M d, Y" }}</span></div>
+      </div>
+
+      {% if similar_jobs %}
+      <div class="sidebar-card">
+        <h3>🔁 Similar Jobs</h3>
+        {% for sj in similar_jobs %}
+        <a href="{% url 'job_detail' sj.pk %}" class="similar-job">
+          <div style="font-weight:600;font-size:.85rem;">{{ sj.title }}</div>
+          <div style="font-size:.75rem;color:var(--text2);">{{ sj.company }} · {{ sj.location }}</div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

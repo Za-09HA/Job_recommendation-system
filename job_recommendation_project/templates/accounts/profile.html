@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — NexaJobs{% endblock %}
+{% block extra_head %}
+<style>
+.profile-wrap{max-width:800px;margin:0 auto;padding:3rem 2rem;}
+.profile-hero{background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);padding:2.5rem;margin-bottom:1.5rem;display:flex;gap:2rem;align-items:flex-start;}
+.avatar{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:700;flex-shrink:0;color:#fff;font-family:'Syne',sans-serif;}
+.profile-name{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:.2rem;}
+.profile-username{color:var(--text2);margin-bottom:1rem;}
+.profile-section{background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.8rem;margin-bottom:1rem;}
+.profile-section h3{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--accent);}
+</style>
+{% endblock %}
+{% block content %}
+<div class="profile-wrap">
+  <div class="profile-hero anim-up">
+    <div class="avatar">{{ user.first_name.0|default:user.username.0|upper }}</div>
+    <div style="flex:1">
+      <div class="profile-name">{{ user.get_full_name|default:user.username }}</div>
+      <div class="profile-username">@{{ user.username }} · {{ user.email }}</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        {% if profile.experience_level %}<span class="badge badge-blue">{{ profile.get_experience_level_display }}</span>{% endif %}
+        {% if profile.preferred_location %}<span class="badge badge-purple">📍 {{ profile.preferred_location }}</span>{% endif %}
+      </div>
+      {% if profile.bio %}<p style="margin-top:1rem;color:var(--text2);font-size:.9rem;">{{ profile.bio }}</p>{% endif %}
+    </div>
+    <a href="{% url 'profile_edit' %}" class="btn btn-outline btn-sm">Edit Profile</a>
+  </div>
+
+  {% if profile.skills %}
+  <div class="profile-section anim-up-2">
+    <h3>⚙️ Skills</h3>
+    {% for sk in profile.get_skills_list %}<span class="skill-tag" style="font-size:.85rem;padding:.3rem .9rem;">{{ sk }}</span>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if profile.preferred_roles %}
+  <div class="profile-section anim-up-2">
+    <h3>🎯 Preferred Roles</h3>
+    {% for role in profile.get_preferred_roles_list %}<span class="badge badge-purple" style="margin:.15rem;">{{ role }}</span>{% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="anim-up-3" style="display:flex;gap:1rem;flex-wrap:wrap;">
+    <a href="{% url 'recommendations' %}" class="btn btn-primary">See My Recommendations →</a>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline">Dashboard</a>
+  </div>
+</div>
+{% endblock %}

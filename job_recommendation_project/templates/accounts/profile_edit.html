@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile — NexaJobs{% endblock %}
+{% block extra_head %}
+<style>
+.edit-wrap{max-width:700px;margin:0 auto;padding:3rem 2rem;}
+.edit-card{background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);padding:2.5rem;}
+.edit-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:.4rem;}
+.edit-sub{color:var(--text2);font-size:.9rem;margin-bottom:2rem;}
+.section-divider{font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin:2rem 0 1rem;padding-top:1.2rem;border-top:1px solid var(--glass-border);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:600px){.form-row{grid-template-columns:1fr;}}
+
+/* PDF Upload Zone */
+.pdf-zone{border:2px dashed var(--glass-border);border-radius:var(--radius);padding:2rem;text-align:center;transition:all .3s;cursor:pointer;position:relative;}
+.pdf-zone:hover,.pdf-zone.drag{border-color:var(--accent);background:rgba(79,142,247,.05);}
+.pdf-icon{font-size:2.5rem;margin-bottom:.8rem;}
+.pdf-zone-title{font-weight:600;margin-bottom:.3rem;}
+.pdf-zone-sub{font-size:.82rem;color:var(--text3);}
+.pdf-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.pdf-preview{display:none;align-items:center;gap:1rem;padding:1rem 1.2rem;background:rgba(6,214,160,.08);border:1px solid rgba(6,214,160,.2);border-radius:var(--radius-sm);margin-top:1rem;}
+.pdf-preview.show{display:flex;}
+.pdf-preview-icon{font-size:1.8rem;}
+.pdf-preview-info{flex:1;}
+.pdf-preview-name{font-weight:600;font-size:.9rem;color:var(--accent3);}
+.pdf-preview-size{font-size:.75rem;color:var(--text3);}
+.pdf-clear{background:none;border:none;color:var(--text3);cursor:pointer;font-size:1.2rem;padding:.3rem;}
+.pdf-clear:hover{color:#f72585;}
+
+/* Existing resume indicator */
+.existing-resume{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.2rem;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.15);border-radius:var(--radius-sm);margin-bottom:.8rem;font-size:.85rem;}
+.existing-resume a{color:var(--accent);text-decoration:none;font-weight:600;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="edit-wrap">
+  <div class="edit-card anim-up">
+    <div class="edit-title">Edit Profile</div>
+    <div class="edit-sub">The more you fill in, the better your AI recommendations.</div>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- About -->
+      <div class="section-divider">About You</div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        {{ form.bio }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Profile Photo</label>
+        {{ form.avatar }}
+        {% if profile.avatar %}<div style="margin-top:.5rem;font-size:.78rem;color:var(--text3);">Current: {{ profile.avatar.name }}</div>{% endif %}
+      </div>
+
+      <!-- Skills -->
+      <div class="section-divider">Skills & Experience</div>
+      <div class="form-group">
+        <label class="form-label">Skills <span style="color:var(--text3);font-size:.75rem;">(comma-separated)</span></label>
+        {{ form.skills }}
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Experience Level</label>
+          {{ form.experience_level }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Years of Experience</label>
+          {{ form.experience_years }}
+        </div>
+      </div>
+
+      <!-- Preferences -->
+      <div class="section-divider">Preferences</div>
+      <div class="form-group">
+        <label class="form-label">Preferred Job Roles <span style="color:var(--text3);font-size:.75rem;">(comma-separated)</span></label>
+        {{ form.preferred_roles }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preferred Location</label>
+        {{ form.preferred_location }}
+      </div>
+
+      <!-- Resume PDF -->
+      <div class="section-divider">Resume (PDF)</div>
+
+      {% if profile.resume_pdf %}
+      <div class="existing-resume">
+        <span style="font-size:1.4rem;">📄</span>
+        <div style="flex:1;">
+          <div style="font-weight:600;color:var(--text);">Resume uploaded</div>
+          <div style="color:var(--text3);font-size:.78rem;">Upload a new PDF below to replace it</div>
+        </div>
+        <a href="{{ profile.resume_pdf.url }}" target="_blank" class="btn btn-outline btn-sm">View →</a>
+      </div>
+      {% endif %}
+
+      <div class="pdf-zone" id="pdf-zone">
+        <input type="file" name="resume_pdf" accept=".pdf" id="pdf-input" onchange="previewPDF(this)"/>
+        <div id="pdf-placeholder">
+          <div class="pdf-icon">📄</div>
+          <div class="pdf-zone-title">Drop your PDF resume here</div>
+          <div class="pdf-zone-sub">or click to browse · PDF only · max 5MB</div>
+          <div style="margin-top:.8rem;font-size:.78rem;color:var(--accent);">✨ AI will automatically extract text to improve your job matches</div>
+        </div>
+      </div>
+
+      <div class="pdf-preview" id="pdf-preview">
+        <div class="pdf-preview-icon">📄</div>
+        <div class="pdf-preview-info">
+          <div class="pdf-preview-name" id="pdf-name">resume.pdf</div>
+          <div class="pdf-preview-size" id="pdf-size">0 KB</div>
+        </div>
+        <button type="button" class="pdf-clear" onclick="clearPDF()" title="Remove">✕</button>
+      </div>
+
+      {% if form.resume_pdf.errors %}
+      <div class="alert alert-error" style="margin-top:.5rem;">{{ form.resume_pdf.errors.0 }}</div>
+      {% endif %}
+
+      <div style="margin-top:.6rem;font-size:.78rem;color:var(--text3);">
+        💡 The AI reads your resume to match you with better jobs. Only PDF files are supported.
+      </div>
+
+      <!-- Social -->
+      <div class="section-divider">Social Links</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">LinkedIn URL</label>
+          {{ form.linkedin_url }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">GitHub URL</label>
+          {{ form.github_url }}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:1rem;margin-top:2rem;">
+        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;padding:.9rem;">Save Profile →</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const zone = document.getElementById('pdf-zone');
+const placeholder = document.getElementById('pdf-placeholder');
+const preview = document.getElementById('pdf-preview');
+
+// Drag events
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') {
+    document.getElementById('pdf-input').files = e.dataTransfer.files;
+    showPreview(file);
+  }
+});
+
+function previewPDF(input) {
+  if (input.files && input.files[0]) showPreview(input.files[0]);
+}
+
+function showPreview(file) {
+  document.getElementById('pdf-name').textContent = file.name;
+  document.getElementById('pdf-size').textContent = (file.size / 1024).toFixed(1) + ' KB';
+  placeholder.style.display = 'none';
+  preview.classList.add('show');
+}
+
+function clearPDF() {
+  document.getElementById('pdf-input').value = '';
+  placeholder.style.display = 'block';
+  preview.classList.remove('show');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}NexaJobs — AI Job Recommendations{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#050b18;--bg2:#0a1628;--bg3:#0f1f38;
+  --glass:rgba(255,255,255,0.04);--glass-border:rgba(255,255,255,0.08);
+  --accent:#4f8ef7;--accent2:#7c3aed;--accent3:#06d6a0;
+  --text:#e8edf5;--text2:#8899b0;--text3:#4a5a72;
+  --card:rgba(10,22,40,0.85);
+  --glow:0 0 40px rgba(79,142,247,0.15);
+  --radius:16px;--radius-sm:10px;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* Canvas background */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* Layout */
+.page-wrap{position:relative;z-index:1;}
+
+/* Navbar */
+.navbar{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;background:rgba(5,11,24,0.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-border);position:sticky;top:0;z-index:100;}
+.nav-brand{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;}
+.nav-links{display:flex;gap:2rem;align-items:center;}
+.nav-links a{color:var(--text2);text-decoration:none;font-size:.9rem;font-weight:500;transition:color .2s;}
+.nav-links a:hover{color:var(--text);}
+.nav-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff!important;padding:.5rem 1.4rem;border-radius:50px;font-weight:600;transition:transform .2s,box-shadow .2s!important;}
+.nav-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(79,142,247,.4);}
+
+/* Cards */
+.glass-card{background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);backdrop-filter:blur(20px);transition:transform .3s,box-shadow .3s,border-color .3s;}
+.glass-card:hover{transform:translateY(-4px);box-shadow:var(--glow);border-color:rgba(79,142,247,.25);}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.6rem;border-radius:50px;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .25s;border:none;text-decoration:none;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(79,142,247,.4);}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--glass-border);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-success{background:linear-gradient(135deg,#06d6a0,#00b386);color:#fff;}
+.btn-danger{background:linear-gradient(135deg,#f72585,#b5179e);color:#fff;}
+.btn-sm{padding:.45rem 1rem;font-size:.82rem;}
+
+/* Badge */
+.badge{display:inline-block;padding:.25rem .7rem;border-radius:50px;font-size:.75rem;font-weight:600;}
+.badge-blue{background:rgba(79,142,247,.15);color:var(--accent);border:1px solid rgba(79,142,247,.25);}
+.badge-green{background:rgba(6,214,160,.12);color:var(--accent3);border:1px solid rgba(6,214,160,.2);}
+.badge-purple{background:rgba(124,58,237,.15);color:#a78bfa;border:1px solid rgba(124,58,237,.2);}
+.badge-amber{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.2);}
+
+/* Forms */
+.form-group{margin-bottom:1.4rem;}
+.form-label{display:block;margin-bottom:.5rem;font-size:.85rem;color:var(--text2);font-weight:500;}
+.form-control{width:100%;background:var(--bg3);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:.75rem 1rem;color:var(--text);font-family:inherit;font-size:.9rem;transition:border-color .2s,box-shadow .2s;}
+.form-control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,.15);}
+.form-control::placeholder{color:var(--text3);}
+
+/* Match bar */
+.match-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:.4rem;}
+.match-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width .8s cubic-bezier(.4,0,.2,1);}
+
+/* Skills tag */
+.skill-tag{display:inline-block;padding:.2rem .7rem;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);border-radius:50px;font-size:.75rem;color:var(--accent);margin:.15rem;}
+
+/* Alerts */
+.alert{padding:1rem 1.4rem;border-radius:var(--radius-sm);margin-bottom:1.2rem;font-size:.9rem;}
+.alert-success{background:rgba(6,214,160,.1);border:1px solid rgba(6,214,160,.25);color:var(--accent3);}
+.alert-error{background:rgba(247,37,133,.1);border:1px solid rgba(247,37,133,.2);color:#f72585;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px;}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 20px rgba(79,142,247,.2);}50%{box-shadow:0 0 40px rgba(79,142,247,.45);}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.anim-up{animation:fadeUp .6s ease both;}
+.anim-up-2{animation:fadeUp .6s .15s ease both;}
+.anim-up-3{animation:fadeUp .6s .3s ease both;}
+.float{animation:float 4s ease-in-out infinite;}
+
+/* Responsive */
+@media(max-width:768px){
+  .navbar{padding:1rem 1.2rem;}
+  .nav-links{gap:1rem;}
+}
+@media(max-width:600px){
+  .nav-links a:not(.nav-btn){display:none;}
+}
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="page-wrap">
+
+<nav class="navbar">
+  <a href="{% url 'home' %}" class="nav-brand">⬡ NexaJobs</a>
+  <div class="nav-links">
+    <a href="{% url 'job_list' %}">Browse Jobs</a>
+    <a href="{% url 'api_docs' %}">API Docs</a>
+    {% if user.is_authenticated %}
+    {% if user.profile.is_recruiter %}
+    <a href="{% url 'recruiter_dashboard' %}">🏢 Recruiter</a>
+    {% else %}
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    {% endif %}
+    <a href="{% url 'recommendations' %}">For You</a>
+    <a href="{% url 'saved_jobs' %}">Saved</a>
+    <a href="{% url 'my_applications' %}">Applications</a>
+    <a href="{% url 'profile' %}">Profile</a>
+    <a href="{% url 'logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    {% else %}
+    <a href="{% url 'login' %}">Login</a>
+    <a href="{% url 'register' %}" class="nav-btn">Get Started</a>
+    {% endif %}
+  </div>
+</nav>
+
+<main>
+{% if messages %}
+<div style="max-width:900px;margin:1rem auto;padding:0 2rem;">
+  {% for msg in messages %}
+  <div class="alert alert-{% if msg.tags == 'error' %}error{% else %}success{% endif %}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% block content %}{% endblock %}
+</main>
+
+<footer style="text-align:center;padding:2.5rem;color:var(--text3);font-size:.85rem;border-top:1px solid var(--glass-border);margin-top:4rem;">
+  <p style="margin-bottom:.4rem;font-family:'Syne',sans-serif;font-size:1rem;color:var(--text2);">⬡ NexaJobs</p>
+  AI-Powered Job Recommendations &copy; 2024. Built with Django + ML.
+</footer>
+</div>
+
+<script>
+// THREE.JS particle background
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.z = 30;
+
+  // Particles
+  const count = 1800;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count*3);
+  const colors = new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    pos[i*3]=(Math.random()-0.5)*120;
+    pos[i*3+1]=(Math.random()-0.5)*80;
+    pos[i*3+2]=(Math.random()-0.5)*60;
+    const t=Math.random();
+    if(t<0.33){colors[i*3]=0.31;colors[i*3+1]=0.55;colors[i*3+2]=0.97;}
+    else if(t<0.66){colors[i*3]=0.48;colors[i*3+1]=0.23;colors[i*3+2]=0.93;}
+    else{colors[i*3]=0.02;colors[i*3+1]=0.84;colors[i*3+2]=0.63;}
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  const mat = new THREE.PointsMaterial({size:0.18,vertexColors:true,transparent:true,opacity:0.7});
+  scene.add(new THREE.Points(geo,mat));
+
+  // Connecting lines (sparse)
+  const lineMat = new THREE.LineBasicMaterial({color:0x4f8ef7,transparent:true,opacity:0.04});
+  for(let i=0;i<25;i++){
+    const lp=[]; const idx=Math.floor(Math.random()*count);
+    lp.push(new THREE.Vector3(pos[idx*3],pos[idx*3+1],pos[idx*3+2]));
+    const idx2=Math.floor(Math.random()*count);
+    lp.push(new THREE.Vector3(pos[idx2*3],pos[idx2*3+1],pos[idx2*3+2]));
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(lp),lineMat));
+  }
+
+  let mx=0,my=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX/window.innerWidth-0.5;my=e.clientY/window.innerHeight-0.5;});
+
+  function animate(){
+    requestAnimationFrame(animate);
+    scene.rotation.y+=0.0005;
+    scene.rotation.x+=0.0002;
+    camera.position.x+=(mx*3-camera.position.x)*0.02;
+    camera.position.y+=(-my*2-camera.position.y)*0.02;
+    renderer.render(scene,camera);
+  }
+  animate();
+
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+})();
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

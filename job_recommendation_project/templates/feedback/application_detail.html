@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Application — {{ application.job.title }} — NexaJobs{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto;padding:2rem;">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+    <h1 style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;">📄 My Application</h1>
+    <a href="{% url 'my_applications' %}" class="btn btn-outline">← Back</a>
+  </div>
+
+  <!-- Status Banner -->
+  <div style="margin-bottom:1.5rem;padding:1.5rem;border-radius:12px;
+    {% if application.status == 'hired' %}background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.3);
+    {% elif application.status == 'shortlisted' %}background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.3);
+    {% elif application.status == 'rejected' %}background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);
+    {% elif application.status == 'under_review' %}background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);
+    {% else %}background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);{% endif %}">
+
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+      <div style="font-size:2rem;">
+        {% if application.status == 'hired' %}🎉
+        {% elif application.status == 'shortlisted' %}📋
+        {% elif application.status == 'rejected' %}❌
+        {% elif application.status == 'under_review' %}🔍
+        {% else %}📤{% endif %}
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:1.1rem;
+          {% if application.status == 'hired' %}color:#06d6a0;
+          {% elif application.status == 'shortlisted' %}color:var(--accent2);
+          {% elif application.status == 'rejected' %}color:#f87171;
+          {% elif application.status == 'under_review' %}color:var(--accent);
+          {% else %}color:#fbbf24;{% endif %}">
+          {% if application.status == 'hired' %}🎉 Congratulations! Your application was accepted!
+          {% elif application.status == 'shortlisted' %}📋 You have been shortlisted!
+          {% elif application.status == 'rejected' %}❌ Application not selected this time
+          {% elif application.status == 'under_review' %}🔍 Your application is under review
+          {% else %}📤 Application submitted — waiting for response{% endif %}
+        </div>
+        <div style="color:var(--text2);font-size:.85rem;margin-top:.3rem;">
+          Applied {{ application.applied_at|date:"M d, Y" }} · Last updated {{ application.updated_at|date:"M d, Y" }}
+        </div>
+      </div>
+    </div>
+
+    {% if application.status == 'hired' %}
+    <div style="margin-top:1rem;color:var(--text2);font-size:.9rem;">
+      The company will contact you soon with further details. Check your messages below!
+    </div>
+    {% elif application.status == 'shortlisted' %}
+    <div style="margin-top:1rem;color:var(--text2);font-size:.9rem;">
+      You have been shortlisted for an interview. Check your messages below for next steps!
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Job Info -->
+  <div class="glass-card" style="padding:1.5rem;margin-bottom:1.5rem;">
+    <div style="font-size:1.1rem;font-weight:700;">{{ application.job.title }}</div>
+    <div style="color:var(--text2);font-size:.9rem;margin-top:.3rem;">{{ application.job.company }} · {{ application.job.location }}</div>
+  </div>
+
+  <!-- Messages Section -->
+  <div class="glass-card" style="padding:1.5rem;margin-bottom:1.5rem;">
+    <h2 style="font-family:'Syne',sans-serif;font-size:1.2rem;margin-bottom:1.2rem;">💬 Messages</h2>
+
+    <!-- Message Thread -->
+    <div style="max-height:400px;overflow-y:auto;margin-bottom:1rem;" id="msg-thread">
+      {% if msgs %}
+        {% for msg in msgs %}
+        <div style="margin-bottom:1rem;display:flex;{% if msg.sender == request.user %}justify-content:flex-end;{% endif %}">
+          <div style="max-width:70%;padding:1rem;border-radius:12px;
+            {% if msg.sender == request.user %}
+            background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-bottom-right-radius:4px;
+            {% else %}
+            background:var(--bg2);border:1px solid var(--glass-border);border-bottom-left-radius:4px;
+            {% endif %}">
+            <div style="font-size:.75rem;opacity:.7;margin-bottom:.4rem;">
+              {% if msg.sender == request.user %}You{% else %}{{ msg.sender.first_name|default:msg.sender.username }} ({{ application.job.company }}){% endif %}
+              · {{ msg.sent_at|date:"M d, g:i A" }}
+            </div>
+            <div style="font-size:.9rem;line-height:1.6;">{{ msg.message }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align:center;padding:2rem;color:var(--text3);">
+          <div style="font-size:2rem;margin-bottom:.5rem;">💬</div>
+          <p>No messages yet. Send a message to the recruiter!</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Send Message Form -->
+    <form method="post" style="display:flex;gap:.5rem;">
+      {% csrf_token %}
+      <input type="text" name="message" placeholder="Type a message to the recruiter..."
+        style="flex:1;background:var(--bg2);border:1px solid var(--glass-border);border-radius:8px;padding:.8rem 1rem;color:var(--text);font-size:.9rem;"
+        required>
+      <button type="submit" class="btn btn-primary" style="padding:.8rem 1.5rem;">Send →</button>
+    </form>
+  </div>
+
+  <!-- Application Details -->
+  <div class="glass-card" style="padding:1.5rem;">
+    <h3 style="margin-bottom:1rem;color:var(--text2);">Application Details</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;font-size:.9rem;">
+      <div><span style="color:var(--text2);">Name:</span> {{ application.full_name }}</div>
+      <div><span style="color:var(--text2);">Email:</span> {{ application.email }}</div>
+      <div><span style="color:var(--text2);">Phone:</span> {{ application.phone }}</div>
+      <div><span style="color:var(--text2);">Experience:</span> {{ application.years_of_experience }} years</div>
+    </div>
+    {% if application.resume_pdf %}
+    <a href="{{ application.resume_pdf.url }}" target="_blank" class="btn btn-outline" style="margin-top:1rem;font-size:.85rem;">📄 View Resume</a>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+// Auto scroll to bottom of messages
+const thread = document.getElementById('msg-thread');
+if (thread) thread.scrollTop = thread.scrollHeight;
+</script>
+{% endblock %}

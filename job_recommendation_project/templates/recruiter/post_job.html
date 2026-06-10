@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}{% if job %}Edit Job{% else %}Post a Job{% endif %} — NexaJobs{% endblock %}
+{% block content %}
+<div style="padding:2rem 3rem;max-width:800px;margin:0 auto;">
+  <div style="margin-bottom:2rem;">
+    <h1 style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;">
+      {% if job %}✏️ Edit Job{% else %}+ Post a New Job{% endif %}
+    </h1>
+    <p style="color:var(--text2);">Fill in the details below to {% if job %}update this{% else %}post a new{% endif %} job listing.</p>
+  </div>
+
+  <div class="glass-card" style="padding:2rem;">
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+      <div style="margin-bottom:1.2rem;">
+        <label style="display:block;margin-bottom:.4rem;color:var(--text2);font-size:.9rem;">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        <div style="color:#f87171;font-size:.8rem;margin-top:.3rem;">{{ field.errors.0 }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+        <button type="submit" class="btn btn-primary">{% if job %}Update Job{% else %}Post Job{% endif %}</button>
+        <a href="{% url 'recruiter_dashboard' %}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

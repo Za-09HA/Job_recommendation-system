@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Login — NexaJobs{% endblock %}
+{% block extra_head %}
+<style>
+.auth-wrap{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+.auth-card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);padding:2.5rem;backdrop-filter:blur(30px);}
+.auth-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:.4rem;}
+.auth-sub{color:var(--text2);font-size:.9rem;margin-bottom:2rem;}
+.auth-footer{text-align:center;margin-top:1.5rem;font-size:.85rem;color:var(--text2);}
+.auth-footer a{color:var(--accent);text-decoration:none;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card anim-up">
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Sign in to see your AI recommendations</div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" placeholder="Your username" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" placeholder="Your password" required/>
+      </div>
+      {% if form.errors %}<div class="alert alert-error">Invalid username or password.</div>{% endif %}
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.9rem;">Sign In →</button>
+    </form>
+    <div class="auth-footer">Don't have an account? <a href="{% url 'register' %}">Create one free</a></div>
+  </div>
+</div>
+{% endblock %}
